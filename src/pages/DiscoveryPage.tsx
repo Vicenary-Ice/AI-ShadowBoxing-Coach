@@ -1,6 +1,6 @@
 import PageShell from "@/components/PageShell";
 import SegmentedControl from "@/components/SegmentedControl";
-import { Search, MapPin, Star, ExternalLink, Trophy, Calendar as CalendarIcon, MessageCircle, UserPlus, UserCheck } from "lucide-react";
+import { Search, MapPin, Star, ExternalLink, Trophy, Calendar as CalendarIcon, MessageCircle, UserPlus, UserCheck, Clock, DollarSign, Phone } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,12 +15,25 @@ const boxers = [
   { name: "Amir Hassan", distance: "4.0 mi", level: "Intermediate", weight: "Welterweight", gym: "Champion's Gym", bio: "Focused on defensive boxing. Great counter-puncher." },
 ];
 
-const events = [
-  { title: "Friday Night Smoker", venue: "Iron Fist Boxing", date: "Feb 28", featured: true, tag: "Sponsored" },
-  { title: "Golden Gloves Regional", venue: "Downtown Arena", date: "Mar 15", featured: true, tag: "Tournament" },
-  { title: "Boxing Footwork Seminar", venue: "Pacific Rim Boxing", date: "Mar 5", featured: false },
-  { title: "Open Sparring Night", venue: "Champion's Gym", date: "Every Thursday", featured: false },
-  { title: "Youth Boxing Clinic", venue: "Community Center", date: "Mar 8", featured: false },
+interface EventItem {
+  title: string;
+  venue: string;
+  date: string;
+  featured: boolean;
+  tag?: string;
+  time: string;
+  address: string;
+  price: string;
+  description: string;
+  contact: string;
+}
+
+const events: EventItem[] = [
+  { title: "Friday Night Smoker", venue: "Iron Fist Boxing", date: "Feb 28", featured: true, tag: "Sponsored", time: "7:00 PM – 10:00 PM", address: "412 W Industrial Blvd, Suite 8", price: "$15 GA / $30 Ringside", description: "An exciting evening of amateur bouts featuring local talent. 8 fights on the card across weight classes. Food trucks, DJ, and cash bar on-site.", contact: "Coach Ray — (555) 012-3456" },
+  { title: "Golden Gloves Regional", venue: "Downtown Arena", date: "Mar 15", featured: true, tag: "Tournament", time: "12:00 PM – 8:00 PM", address: "1 Arena Plaza, Downtown", price: "$25 GA / $50 VIP", description: "USA Boxing sanctioned regional qualifier. Winners advance to state. Weigh-ins the night before. Open to all registered amateur boxers with current passbooks.", contact: "USA Boxing Local — usaboxinglocal@email.com" },
+  { title: "Boxing Footwork Seminar", venue: "Pacific Rim Boxing", date: "Mar 5", featured: false, time: "10:00 AM – 12:00 PM", address: "789 Pacific Ave", price: "Free for members / $20 drop-in", description: "2-hour workshop led by Coach Tanaka on pivots, angles, and ring cutting. All levels welcome. Bring hand wraps and boxing shoes.", contact: "Front desk — (555) 987-6543" },
+  { title: "Open Sparring Night", venue: "Champion's Gym", date: "Every Thursday", featured: false, time: "6:00 PM – 8:00 PM", address: "220 Main St, 2nd Floor", price: "$10 drop-in", description: "Controlled sparring for all levels. Headgear and 16oz gloves required. Coaches ref and give feedback between rounds.", contact: "Champion's Gym IG — @championsgym" },
+  { title: "Youth Boxing Clinic", venue: "Community Center", date: "Mar 8", featured: false, time: "9:00 AM – 11:00 AM", address: "55 Community Dr", price: "Free", description: "Boxing fundamentals for ages 8–16. Covers stance, combos, and defense. All equipment provided. Limited to 30 spots.", contact: "Coach Davis — (555) 321-0000" },
 ];
 
 const levelColor = (level: string) => {
@@ -34,6 +47,7 @@ const DiscoveryPage = () => {
   const [selectedBoxer, setSelectedBoxer] = useState<typeof boxers[0] | null>(null);
   const { openChatWith, friendRequests, toggleFriendRequest } = useApp();
   const navigate = useNavigate();
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   const filtered = boxers.filter((b) =>
     b.name.toLowerCase().includes(search.toLowerCase())
@@ -101,7 +115,7 @@ const DiscoveryPage = () => {
                     <span className="flex items-center gap-1"><MapPin size={11} />{e.venue}</span>
                     <span className="flex items-center gap-1"><CalendarIcon size={11} />{e.date}</span>
                   </div>
-                  <Button size="sm" className="gradient-fire text-primary-foreground border-none text-xs font-semibold">
+                  <Button onClick={() => setSelectedEvent(e)} size="sm" className="gradient-fire text-primary-foreground border-none text-xs font-semibold">
                     Learn More <ExternalLink size={12} className="ml-1" />
                   </Button>
                 </div>
@@ -119,7 +133,7 @@ const DiscoveryPage = () => {
                       <span>{e.date}</span>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="text-xs border-border text-foreground">
+                  <Button onClick={() => setSelectedEvent(e)} variant="outline" size="sm" className="text-xs border-border text-foreground">
                     Details
                   </Button>
                 </div>
@@ -174,6 +188,52 @@ const DiscoveryPage = () => {
                   >
                     <MessageCircle size={16} className="mr-2" /> Message
                   </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Detail Modal */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent className="bg-card border-border text-foreground max-w-sm">
+          {selectedEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display text-2xl tracking-wider">{selectedEvent.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                {selectedEvent.tag && (
+                  <span className="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground rounded-md">
+                    {selectedEvent.tag}
+                  </span>
+                )}
+                <p className="text-sm text-muted-foreground leading-relaxed">{selectedEvent.description}</p>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin size={14} className="text-primary shrink-0" />
+                    <div>
+                      <p className="font-semibold text-foreground">{selectedEvent.venue}</p>
+                      <p className="text-xs text-muted-foreground">{selectedEvent.address}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarIcon size={14} className="text-primary shrink-0" />
+                    <span className="text-foreground">{selectedEvent.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock size={14} className="text-primary shrink-0" />
+                    <span className="text-foreground">{selectedEvent.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign size={14} className="text-primary shrink-0" />
+                    <span className="text-foreground">{selectedEvent.price}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone size={14} className="text-primary shrink-0" />
+                    <span className="text-muted-foreground">{selectedEvent.contact}</span>
+                  </div>
                 </div>
               </div>
             </>
