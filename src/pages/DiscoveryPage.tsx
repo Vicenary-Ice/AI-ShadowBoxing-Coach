@@ -1,9 +1,11 @@
 import PageShell from "@/components/PageShell";
 import SegmentedControl from "@/components/SegmentedControl";
-import { Search, MapPin, Star, ExternalLink, Trophy, Calendar as CalendarIcon } from "lucide-react";
+import { Search, MapPin, Star, ExternalLink, Trophy, Calendar as CalendarIcon, MessageCircle, UserPlus, UserCheck } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useApp } from "@/context/AppContext";
 
 const boxers = [
   { name: "Jaylen Carter", distance: "0.8 mi", level: "Intermediate", weight: "Middleweight", gym: "Southpaw Athletics", bio: "2 years experience. Looking for technical sparring." },
@@ -30,10 +32,18 @@ const levelColor = (level: string) => {
 const DiscoveryPage = () => {
   const [search, setSearch] = useState("");
   const [selectedBoxer, setSelectedBoxer] = useState<typeof boxers[0] | null>(null);
+  const { openChatWith, friendRequests, toggleFriendRequest } = useApp();
+  const navigate = useNavigate();
 
   const filtered = boxers.filter((b) =>
     b.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleMessage = (name: string) => {
+    openChatWith(name);
+    setSelectedBoxer(null);
+    navigate("/messages");
+  };
 
   return (
     <PageShell title="The Squared Circle">
@@ -77,7 +87,6 @@ const DiscoveryPage = () => {
 
           {/* Tab B: Gym Bulletin */}
           <div>
-            {/* Featured */}
             <div className="space-y-3 mb-5">
               {events.filter(e => e.featured).map((e) => (
                 <div key={e.title} className="glass-card p-5 relative overflow-hidden">
@@ -98,7 +107,6 @@ const DiscoveryPage = () => {
                 </div>
               ))}
             </div>
-            {/* Local Events */}
             <h3 className="font-display text-lg text-foreground mb-3 tracking-wider">Local Events</h3>
             <div className="space-y-2">
               {events.filter(e => !e.featured).map((e) => (
@@ -148,9 +156,25 @@ const DiscoveryPage = () => {
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin size={12} /> {selectedBoxer.distance} away
                 </div>
-                <Button className="w-full gradient-fire text-primary-foreground border-none font-semibold mt-2">
-                  Request to Train
-                </Button>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    onClick={() => toggleFriendRequest(selectedBoxer.name)}
+                    variant={friendRequests.has(selectedBoxer.name) ? "secondary" : "outline"}
+                    className={`flex-1 font-semibold ${friendRequests.has(selectedBoxer.name) ? "text-primary border-primary/30" : "border-border text-foreground"}`}
+                  >
+                    {friendRequests.has(selectedBoxer.name) ? (
+                      <><UserCheck size={16} className="mr-2" /> Requested</>
+                    ) : (
+                      <><UserPlus size={16} className="mr-2" /> Add Friend</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleMessage(selectedBoxer.name)}
+                    className="flex-1 gradient-fire text-primary-foreground border-none font-semibold"
+                  >
+                    <MessageCircle size={16} className="mr-2" /> Message
+                  </Button>
+                </div>
               </div>
             </>
           )}

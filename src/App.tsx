@@ -9,6 +9,7 @@ import DiscoveryPage from "@/pages/DiscoveryPage";
 import MessagesPage from "@/pages/MessagesPage";
 import TrainingPage from "@/pages/TrainingPage";
 import NotFound from "./pages/NotFound";
+import { AppProvider } from "@/context/AppContext";
 
 const queryClient = new QueryClient();
 
@@ -17,16 +18,18 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<ProfilePage />} />
-          <Route path="/discover" element={<DiscoveryPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/training" element={<TrainingPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <BottomTabBar />
-      </BrowserRouter>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<ProfilePage />} />
+            <Route path="/discover" element={<DiscoveryPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <BottomTabBar />
+        </BrowserRouter>
+      </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

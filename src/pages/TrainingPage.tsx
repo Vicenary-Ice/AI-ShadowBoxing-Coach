@@ -3,6 +3,7 @@ import SegmentedControl from "@/components/SegmentedControl";
 import { Play, Square, Timer, Activity, Eye, Zap, Target } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useApp } from "@/context/AppContext";
 
 const workoutTypes = ["Shadow Boxing", "Heavy Bag", "Sparring", "Pads", "Cardio"];
 const combos = ["1-2-3-Slip-2", "Jab-Cross-Hook-Roll", "1-1-2-3-2", "Slip-Slip-Cross-Hook", "Jab-Body-Head"];
@@ -13,7 +14,14 @@ const formatTime = (s: number) => {
   return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
 };
 
+const formatDuration = (s: number) => {
+  const m = Math.floor(s / 60);
+  if (m < 1) return `${s} sec`;
+  return `${m} min`;
+};
+
 const WorkoutLogger = () => {
+  const { addWorkout } = useApp();
   const [active, setActive] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -37,9 +45,18 @@ const WorkoutLogger = () => {
   };
 
   const saveWorkout = () => {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    addWorkout({
+      type,
+      date: dateStr,
+      duration: formatDuration(elapsed),
+      notes: notes || "No notes recorded.",
+    });
     setShowForm(false);
     setElapsed(0);
     setNotes("");
+    setType(workoutTypes[0]);
   };
 
   if (showForm) {
@@ -136,10 +153,8 @@ const AICoach = () => {
 
   return (
     <div className="space-y-4">
-      {/* Camera Viewfinder */}
       <div className="glass-card aspect-[3/4] rounded-xl relative overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/60" />
-        {/* Skeleton overlay */}
         <svg viewBox="0 0 200 300" className="w-40 opacity-30 text-primary" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="100" cy="40" r="20" />
           <line x1="100" y1="60" x2="100" y2="160" />
@@ -149,7 +164,6 @@ const AICoach = () => {
           <line x1="100" y1="160" x2="135" y2="250" />
         </svg>
 
-        {/* Guard Dropped Alert */}
         {sessionActive && guardDropped && (
           <div className="absolute top-4 left-4 right-4 status-bar-danger rounded-lg py-2 px-4 flex items-center justify-center gap-2">
             <Eye size={18} className="text-primary-foreground" />
@@ -157,7 +171,6 @@ const AICoach = () => {
           </div>
         )}
 
-        {/* Live Form Score */}
         {sessionActive && (
           <div className="absolute top-4 right-4 glass-card px-3 py-2 flex items-center gap-2">
             <Target size={14} className="text-accent" />
@@ -173,7 +186,6 @@ const AICoach = () => {
         )}
       </div>
 
-      {/* Combo Ticker */}
       {sessionActive && (
         <div className="glass-card p-3 flex items-center gap-3 overflow-hidden">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Combo:</span>
