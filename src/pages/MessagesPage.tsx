@@ -1,23 +1,7 @@
 import PageShell from "@/components/PageShell";
 import { ArrowLeft, Send, Image, ChevronRight } from "lucide-react";
-import { useState } from "react";
-
-interface Chat {
-  id: string;
-  name: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  isGroup?: boolean;
-}
-
-const chats: Chat[] = [
-  { id: "1", name: "Jaylen Carter", lastMessage: "Down for sparring Thursday?", time: "2m", unread: 2 },
-  { id: "2", name: "Sofia Morales", lastMessage: "Good rounds today 🥊", time: "1h", unread: 0 },
-  { id: "3", name: "Iron Fist Gym Chat", lastMessage: "Coach: Gym closes early Friday", time: "3h", unread: 5, isGroup: true },
-  { id: "4", name: "DeShawn Williams", lastMessage: "Thanks for the tips man", time: "1d", unread: 0 },
-  { id: "5", name: "Sparring Partners", lastMessage: "Kai: Anyone free Saturday AM?", time: "2d", unread: 1, isGroup: true },
-];
+import { useState, useEffect } from "react";
+import { useApp, ChatEntry } from "@/context/AppContext";
 
 interface Message {
   id: string;
@@ -34,13 +18,22 @@ const demoMessages: Message[] = [
 ];
 
 const MessagesPage = () => {
-  const [openChat, setOpenChat] = useState<Chat | null>(null);
+  const { chats, pendingChatOpen, clearPendingChat } = useApp();
+  const [openChat, setOpenChat] = useState<ChatEntry | null>(null);
   const [message, setMessage] = useState("");
+
+  // Auto-open chat when navigated from discovery
+  useEffect(() => {
+    if (pendingChatOpen) {
+      const chat = chats.find((c) => c.name === pendingChatOpen);
+      if (chat) setOpenChat(chat);
+      clearPendingChat();
+    }
+  }, [pendingChatOpen, chats, clearPendingChat]);
 
   if (openChat) {
     return (
       <div className="page-enter min-h-screen bg-background flex flex-col pb-20">
-        {/* Chat Header */}
         <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3">
           <button onClick={() => setOpenChat(null)} className="text-muted-foreground hover:text-foreground transition">
             <ArrowLeft size={20} />
@@ -51,7 +44,6 @@ const MessagesPage = () => {
           <h2 className="font-semibold text-sm text-foreground">{openChat.name}</h2>
         </header>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {demoMessages.map((m) => (
             <div key={m.id} className={`flex ${m.sent ? "justify-end" : "justify-start"}`}>
@@ -67,7 +59,6 @@ const MessagesPage = () => {
           ))}
         </div>
 
-        {/* Input */}
         <div className="sticky bottom-20 bg-card/95 backdrop-blur-md border-t border-border/50 px-4 py-3">
           <div className="flex items-center gap-2">
             <button className="p-2 text-muted-foreground hover:text-foreground transition">
