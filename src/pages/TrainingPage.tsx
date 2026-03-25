@@ -232,7 +232,7 @@ const AICoach = () => {
         const handLandmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-            delegate: "GPU"
+            delegate: "CPU"
           },
           runningMode: "VIDEO",
           numHands: 2,
@@ -245,7 +245,7 @@ const AICoach = () => {
         const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-            delegate: "GPU"
+            delegate: "CPU"
           },
           runningMode: "VIDEO",
           numPoses: 1,
