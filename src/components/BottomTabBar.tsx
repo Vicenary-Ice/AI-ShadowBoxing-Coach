@@ -1,9 +1,9 @@
-import { User, Search, MessageCircle, Dumbbell } from "lucide-react";
+import { User, Users, MessageCircle, Dumbbell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
   { path: "/", icon: User, label: "Profile" },
-  { path: "/discover", icon: Search, label: "Discover" },
+  { path: "/friends", icon: Users, label: "Squad" },
   { path: "/messages", icon: MessageCircle, label: "Messages" },
   { path: "/training", icon: Dumbbell, label: "Training" },
 ];

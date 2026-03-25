@@ -27,6 +27,17 @@ export interface ChatEntry {
   isGroup?: boolean;
 }
 
+export interface FriendUser {
+  id: string;
+  name: string;
+  nametag: string;
+  level: string;
+  weight: string;
+  gym: string;
+  bio: string;
+  workouts: Workout[];
+}
+
 interface AppContextType {
   profile: Profile;
   setProfile: React.Dispatch<React.SetStateAction<Profile>>;
@@ -36,8 +47,9 @@ interface AppContextType {
   openChatWith: (name: string) => void;
   pendingChatOpen: string | null;
   clearPendingChat: () => void;
-  friendRequests: Set<string>;
-  toggleFriendRequest: (name: string) => void;
+  friends: FriendUser[];
+  addFriendByNametag: (nametag: string) => boolean;
+  removeFriend: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -47,6 +59,59 @@ export const useApp = () => {
   if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 };
+
+// Pool of searchable users — found by nametag
+export const allUsers: FriendUser[] = [
+  {
+    id: "u1", name: "Jaylen Carter", nametag: "@jaylen_c",
+    level: "Intermediate", weight: "Middleweight", gym: "Southpaw Athletics",
+    bio: "2 years experience. Looking for technical sparring.",
+    workouts: [
+      { id: "uw1", type: "Sparring", date: "Today", duration: "30 min", notes: "Good rounds. Worked on the jab-cross-hook combo." },
+      { id: "uw2", type: "Heavy Bag", date: "Yesterday", duration: "45 min", notes: "Power shots. Focused on body work." },
+      { id: "uw3", type: "Shadow Boxing", date: "Mar 22", duration: "20 min", notes: "Morning session. Footwork and angles." },
+    ],
+  },
+  {
+    id: "u2", name: "Sofia Morales", nametag: "@sofia_m",
+    level: "Advanced", weight: "Featherweight", gym: "Iron Fist Boxing",
+    bio: "Amateur record 5-1. Preparing for Golden Gloves.",
+    workouts: [
+      { id: "uw4", type: "Pads", date: "Today", duration: "40 min", notes: "Sharp combos. Coach called the 1-2-3-slip-2 all session." },
+      { id: "uw5", type: "Sparring", date: "Mar 23", duration: "25 min", notes: "Defense-focused. Worked head movement against pressure fighters." },
+      { id: "uw6", type: "Cardio", date: "Mar 21", duration: "50 min", notes: "5-mile run + jump rope intervals." },
+    ],
+  },
+  {
+    id: "u3", name: "DeShawn Williams", nametag: "@deshawn_w",
+    level: "Beginner", weight: "Heavyweight", gym: "Downtown Boxing Club",
+    bio: "Just started 6 months ago. Eager to learn.",
+    workouts: [
+      { id: "uw7", type: "Heavy Bag", date: "Mar 24", duration: "30 min", notes: "Working on stance and basic combinations." },
+      { id: "uw8", type: "Cardio", date: "Mar 22", duration: "35 min", notes: "Jump rope and footwork drills." },
+    ],
+  },
+  {
+    id: "u4", name: "Kai Nakamura", nametag: "@kai_n",
+    level: "Advanced", weight: "Lightweight", gym: "Pacific Rim Boxing",
+    bio: "Former kickboxer transitioning to pure boxing.",
+    workouts: [
+      { id: "uw9", type: "Shadow Boxing", date: "Today", duration: "30 min", notes: "Slipping and rolling. Working the peek-a-boo style." },
+      { id: "uw10", type: "Sparring", date: "Mar 23", duration: "45 min", notes: "Six rounds with mixed partners. Good counter-punching session." },
+      { id: "uw11", type: "Pads", date: "Mar 21", duration: "40 min", notes: "Speed work. Coach had me throwing in tight windows." },
+    ],
+  },
+  {
+    id: "u5", name: "Amir Hassan", nametag: "@amir_h",
+    level: "Intermediate", weight: "Welterweight", gym: "Champion's Gym",
+    bio: "Focused on defensive boxing. Great counter-puncher.",
+    workouts: [
+      { id: "uw12", type: "Pads", date: "Mar 24", duration: "35 min", notes: "Counter-punching drills. 3-2 off the slip." },
+      { id: "uw13", type: "Heavy Bag", date: "Mar 22", duration: "40 min", notes: "Power combinations. Body-head sequences." },
+      { id: "uw14", type: "Cardio", date: "Mar 20", duration: "45 min", notes: "Sprint intervals on the track." },
+    ],
+  },
+];
 
 const defaultWorkouts: Workout[] = [
   { id: "w1", type: "Heavy Bag", date: "Today", duration: "45 min", notes: "Worked on body shots and uppercuts. Good power on the 3-2 combo." },
@@ -78,7 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [workouts, setWorkouts] = useState<Workout[]>(defaultWorkouts);
   const [chats, setChats] = useState<ChatEntry[]>(defaultChats);
   const [pendingChatOpen, setPendingChatOpen] = useState<string | null>(null);
-  const [friendRequests, setFriendRequests] = useState<Set<string>>(new Set());
+  const [friends, setFriends] = useState<FriendUser[]>([]);
 
   const addWorkout = useCallback((w: Omit<Workout, "id">) => {
     setWorkouts((prev) => [{ ...w, id: `w${Date.now()}` }, ...prev]);
@@ -98,17 +163,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearPendingChat = useCallback(() => setPendingChatOpen(null), []);
 
-  const toggleFriendRequest = useCallback((name: string) => {
-    setFriendRequests((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
+  const addFriendByNametag = useCallback((nametag: string): boolean => {
+    const tag = nametag.startsWith("@") ? nametag.toLowerCase() : `@${nametag.toLowerCase()}`;
+    const found = allUsers.find((u) => u.nametag.toLowerCase() === tag);
+    if (!found) return false;
+    setFriends((prev) => {
+      if (prev.find((f) => f.id === found.id)) return prev;
+      return [...prev, found];
     });
+    return true;
+  }, []);
+
+  const removeFriend = useCallback((id: string) => {
+    setFriends((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
   return (
-    <AppContext.Provider value={{ profile, setProfile, workouts, addWorkout, chats, openChatWith, pendingChatOpen, clearPendingChat, friendRequests, toggleFriendRequest }}>
+    <AppContext.Provider value={{ profile, setProfile, workouts, addWorkout, chats, openChatWith, pendingChatOpen, clearPendingChat, friends, addFriendByNametag, removeFriend }}>
       {children}
     </AppContext.Provider>
   );
